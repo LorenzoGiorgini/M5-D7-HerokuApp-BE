@@ -20,8 +20,6 @@ const corsOptions = {
     }
 }
 
-console.log(corsOptions.origin)
-
 server.use(express.static(publicFolderPath))
 server.use(express.json());
 server.use(cors(corsOptions));
