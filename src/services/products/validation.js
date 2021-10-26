@@ -6,12 +6,10 @@ const {validationResult, body} = expressValidator
 
 export const productChecker = [
   body("name").exists().withMessage("missing mandatory field!"),
-  body("ratdescriptione").exists().withMessage("missing mandatory field!"),
+  body("description").exists().withMessage("missing mandatory field!"),
   body("brand").exists().withMessage("missing mandatory field!"),
   body("price").exists().withMessage("missing mandatory field!"),
   body("category").exists().withMessage("missing mandatory field!"),
-
-
 ]
 
 

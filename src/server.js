@@ -9,18 +9,18 @@ const server = express();
 
 const publicFolderPath = join(process.cwd(), "./public")
 
+
+//Cors whitelisting and adding options
 const whitelist = [process.env.FE_URL , process.env.FE_DEV_URL]
 const corsOptions = {
     origin : function (origin, next) { 
-        if (whitelist.includes(origin)) {
+        if (!origin || whitelist.indexOf(origin) !== -1) {
             next(null , true)
         } else {
             next(new Error("CROSS ORIGIN ERROR"))
         }
     }
 }
-
-console.log(corsOptions.origin)
 
 server.use(express.static(publicFolderPath))
 server.use(express.json());
