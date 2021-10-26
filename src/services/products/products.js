@@ -5,6 +5,8 @@ import express from 'express';
 import uniqid from 'uniqid';
 import multer from 'multer';
 import { extname } from 'path';
+import { CloudinaryStorage } from "multer-storage-cloudinary"
+import { v2 as cloudinary } from "cloudinary"
 // import { validationResult } from 'express-validator';
 
 import {productChecker, valueProductChecker} from './validation.js'
@@ -27,8 +29,19 @@ const dataFolder = join(
 	dirname(fileURLToPath(import.meta.url)),
 	'../../data/products.json',
 );
+
 const allReviews = () => readJSON(reviewsJSON)
+
 const allProducts = () => readJSON(dataFolder);
+
+
+const cloudinaryStorage = new CloudinaryStorage({
+	cloudinary,
+	params: {
+		folder: "Product-Folder"
+	}
+})
+
 const writeProducts = (product) => writeJSON(dataFolder, product);
 productsRouter.get('/', async (req, res, next) => {
 	try {
@@ -115,30 +128,18 @@ productsRouter.post('/', productChecker, valueProductChecker , async (req, res, 
 });
 
 
-productsRouter.post('/:productId/uploadImage' , multer().single("imageUrl") , async (req, res, next) => {
+productsRouter.post('/:productId/uploadImage' , multer({storage: cloudinaryStorage}).single("imageUrl") , async (req, res, next) => {
 	try {
-
-		const extension = extname(req.file.originalname)
-
-		const productImageFolder = join(process.cwd(), "./public/img/products")
-
-		const imageLink = `http://localhost:3001/img/products/${req.params.productId}${extension}`;
 
 		const products = await allProducts()
 
 		const changeImage = products.find( product => product._id === req.params.productId)
 
-		changeImage.imageUrl = imageLink
+		changeImage.imageUrl = req.file.path
 
 		const productsFullArray = products.filter( product => product._id !== req.params.productId)
 
 		productsFullArray.push(changeImage)
-
-		const productImage = (fileName , buffer) => {
-			writeFile(join(productImageFolder , fileName) , buffer)
-		}
-
-		await productImage(req.params.productId + extension , req.file.buffer)
 		
 		await writeJSON(dataFolder ,productsFullArray)
 
