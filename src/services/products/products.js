@@ -47,10 +47,9 @@ productsRouter.get('/', async (req, res, next) => {
 	try {
 		if(req.query.category){
 			const products = await allProducts()
-		console.log(req.query, 'sdsads')
 
-		const productsFiltered = products.filter((products) => products.category === req.query.category);
-		res.status(200).send(productsFiltered)
+			const productsFiltered = products.filter((products) => products.category === req.query.category);
+			res.status(200).send(productsFiltered)
 		}else{
 			const products = await allProducts();
 			res.send(products);
@@ -188,7 +187,7 @@ productsRouter.get('/:productId/downloadPDF' , async (req, res, next) => {
 		res.setHeader('Content-Disposition', `attachment; filename=${data._id}.pdf`)
 
 		//source and destination of the stream
-		const source = createPDF(data)
+		const source = await createPDF(data)
 		
 		const destination = res
 

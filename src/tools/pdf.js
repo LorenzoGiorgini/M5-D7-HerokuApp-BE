@@ -1,7 +1,14 @@
 import PdfPrinter from "pdfmake";
+import {extname} from "path"
+import fetch from "node-fetch";
+import btoa from "btoa"
 
+const fetchImage = async (data) => {
+    let resp = await fetch(data , { responseType: "arraybuffer" })
+    return resp.arrayBuffer()
+}
 
-export const createPDF = (data) => {
+export const createPDF = async (data) => {
     let fonts = {
         Helvetica: {
             normal: 'Helvetica',
@@ -12,14 +19,31 @@ export const createPDF = (data) => {
     let printer = new PdfPrinter(fonts);
 
 
-    if(data.imageUrl !== ""){
-    
+    if(data.imageUrl) {
+        
+        let imageBuffer = await fetchImage(data.imageUrl)
+
+        const base64String = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
+        
+        const imageUrlPath = data.imageUrl.split('/')
+
+
+        const fileName = imageUrlPath[imageUrlPath.length - 1]
+        
+        const extension = extname(fileName)
+
+        console.log(extension)
+
+        const base64UrlPDF = `data:image/${extension};base64,${base64String}`
+
+        console.log(base64UrlPDF)
+
         let docDefinition = {
             content: [
-                /* {
-                    image: file,
-                    width: "100%"
-                } */,
+                {
+                    image: base64UrlPDF,
+                    width: "500"
+                },
                 {
                     text: `${data.name}`,
                     style: "header"
