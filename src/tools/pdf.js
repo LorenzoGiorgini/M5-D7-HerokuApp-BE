@@ -24,19 +24,14 @@ export const createPDF = async (data) => {
         let imageBuffer = await fetchImage(data.imageUrl)
 
         const base64String = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
-        
+
         const imageUrlPath = data.imageUrl.split('/')
-
-
+        
         const fileName = imageUrlPath[imageUrlPath.length - 1]
         
         const extension = extname(fileName)
 
-        console.log(extension)
-
         const base64UrlPDF = `data:image/${extension};base64,${base64String}`
-
-        console.log(base64UrlPDF)
 
         let docDefinition = {
             content: [
