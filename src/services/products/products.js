@@ -4,16 +4,16 @@ import { dirname, join } from 'path';
 import express from 'express';
 import uniqid from 'uniqid';
 import multer from 'multer';
-import { extname } from 'path';
 import { CloudinaryStorage } from "multer-storage-cloudinary"
 import { v2 as cloudinary } from "cloudinary"
-// import { validationResult } from 'express-validator';
 
 import {productChecker, valueProductChecker} from './validation.js'
 
 
+//all the required stuff to make a stream
+import { createPDF } from "../../tools/pdf.js"
+import { pipeline } from 'stream';
 
-import createHttpError from 'http-errors';
 
 const currentFilePath = fileURLToPath(import.meta.url)
 const parentFolderPath = dirname(currentFilePath)
@@ -174,6 +174,33 @@ productsRouter.put('/:productId' , valueProductChecker , async (req, res, next) 
 		next(error);
 	}
 });
+
+
+
+//Products PDF maker
+productsRouter.get('/:productId/downloadPDF' , async (req, res, next) => {
+
+	try {
+		const products = await allProducts();
+
+		const data = products.find((product) => product._id === req.params.productId);
+	
+		res.setHeader('Content-Disposition', `attachment; filename=${data._id}.pdf`)
+
+		//source and destination of the stream
+		const source = createPDF(data)
+		
+		const destination = res
+
+		pipeline(source, destination, error => {
+			if(error) next(error)
+		})
+
+
+	} catch (error) {
+		next(error);
+	}
+})
 
 
 
