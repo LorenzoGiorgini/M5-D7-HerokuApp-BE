@@ -183,7 +183,7 @@ productsRouter.get('/:productId/downloadPDF' , async (req, res, next) => {
 	try {
 		const products = await allProducts();
 
-		const data = products.filter((product) => product._id === req.params.productId);
+		const data = products.find((product) => product._id === req.params.productId);
 	
 		res.setHeader('Content-Disposition', `attachment; filename=${data._id}.pdf`)
 
