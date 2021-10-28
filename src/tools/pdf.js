@@ -19,14 +19,14 @@ const fetchImage = async (data) => {
 const convertImageBase64 = async (data) => {
     let imageBuffer = await fetchImage(data.imageUrl)
 
-    const base64String = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
-
+    const base64String = Buffer.from(imageBuffer).toString("base64")
+    
     const imageUrlPath = data.imageUrl.split('/')
     
     const fileName = imageUrlPath[imageUrlPath.length - 1]
     
     const extension = extname(fileName)
-
+    
     const baseUrl = `data:image/${extension};base64,${base64String}`
 
     return baseUrl
@@ -93,7 +93,7 @@ export const createPDF = async (data) => {
 
 
 export const generatePDFAsync = async (data) => {
-    const asyncPipeline = promisify(pipeline) // promisify is a (VERY COOL) utility which transforms a function that uses callbacks (error-first callbacks) into a function that uses Promises (and so Async/Await). Pipeline is a function that works with callbacks to connect 2 or more streams together --> I can promisify a pipeline getting back and asynchronous pipeline
+    const asyncPipeline = promisify(pipeline)
   
     const fonts = {
       Helvetica: {
@@ -107,7 +107,7 @@ export const generatePDFAsync = async (data) => {
     if (data.imageUrl){
 
         const base64UrlPDF = await convertImageBase64(data)
-
+        
         let docDefinition = {
             content: [
                 {
