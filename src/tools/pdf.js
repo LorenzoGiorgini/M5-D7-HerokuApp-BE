@@ -9,8 +9,27 @@ import { fileURLToPath } from "url";
 import fs from "fs-extra"
 
 const fetchImage = async (data) => {
+    
     let resp = await fetch(data , { responseType: "arraybuffer" })
+
     return resp.arrayBuffer()
+}
+
+
+const convertImageBase64 = async (data) => {
+    let imageBuffer = await fetchImage(data.imageUrl)
+
+    const base64String = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
+
+    const imageUrlPath = data.imageUrl.split('/')
+    
+    const fileName = imageUrlPath[imageUrlPath.length - 1]
+    
+    const extension = extname(fileName)
+
+    const baseUrl = `data:image/${extension};base64,${base64String}`
+
+    return baseUrl
 }
 
 export const createPDF = async (data) => {
@@ -26,17 +45,7 @@ export const createPDF = async (data) => {
 
     if(data.imageUrl) {
         
-        let imageBuffer = await fetchImage(data.imageUrl)
-
-        const base64String = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
-
-        const imageUrlPath = data.imageUrl.split('/')
-        
-        const fileName = imageUrlPath[imageUrlPath.length - 1]
-        
-        const extension = extname(fileName)
-
-        const base64UrlPDF = `data:image/${extension};base64,${base64String}`
+        const base64UrlPDF = await convertImageBase64(data)
 
         let docDefinition = {
             content: [
@@ -97,17 +106,7 @@ export const generatePDFAsync = async (data) => {
 
     if (data.imageUrl){
 
-        let imageBuffer = await fetchImage(data.imageUrl)
-
-        const base64String = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
-
-        const imageUrlPath = data.imageUrl.split('/')
-        
-        const fileName = imageUrlPath[imageUrlPath.length - 1]
-        
-        const extension = extname(fileName)
-
-        const base64UrlPDF = `data:image/${extension};base64,${base64String}`
+        const base64UrlPDF = await convertImageBase64(data)
 
         let docDefinition = {
             content: [
@@ -153,6 +152,5 @@ export const generatePDFAsync = async (data) => {
         await asyncPipeline(pdfReadableStream, fs.createWriteStream(path))
         return path
     }
-  
-  
+
 }
