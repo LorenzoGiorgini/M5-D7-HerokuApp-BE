@@ -15,6 +15,7 @@ import { createPDF , generatePDFAsync } from "../../tools/pdf.js"
 import { pipeline } from 'stream';
 import json2csv from "json2csv"
 import sgMail from '@sendgrid/mail'
+import {extname} from "path";
 
 
 const currentFilePath = fileURLToPath(import.meta.url)
@@ -180,17 +181,12 @@ productsRouter.post('/', productChecker, valueProductChecker , async (req, res, 
 
 		
 		//creating the name for the pdf
+
 		const path = await generatePDFAsync(createdProduct)
 
-		const name = path.toString()
-
-		const namePdf = name.split("\\")
-
-		const realPdfIdName = namePdf[namePdf.length -1]
-		
 		const attachment = fs.readFileSync(path).toString("base64");
 
-		await sendEmailToUser("masterrevenge34@gmail.com", attachment , realPdfIdName)
+		await sendEmailToUser("masterrevenge34@gmail.com", attachment , createdProduct._id)
 
 		res.status(201).send(createdProduct);
 	} catch (error) {
