@@ -94,24 +94,65 @@ export const generatePDFAsync = async (data) => {
     }
   
     const printer = new PdfPrinter(fonts)
-  
-    const docDefinition = {
-      content: ["Another paragraph, this time a little bit longer to make sure, this line will be divided into at least two lines"],
-      defaultStyle: {
-        font: "Helvetica",
-      },
-      // ...
+
+    if (data.imageUrl){
+
+        let imageBuffer = await fetchImage(data.imageUrl)
+
+        const base64String = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
+
+        const imageUrlPath = data.imageUrl.split('/')
+        
+        const fileName = imageUrlPath[imageUrlPath.length - 1]
+        
+        const extension = extname(fileName)
+
+        const base64UrlPDF = `data:image/${extension};base64,${base64String}`
+
+        let docDefinition = {
+            content: [
+                {
+                    image: base64UrlPDF,
+                    width: "500"
+                },
+                {
+                    text: `${data.name}`,
+                    style: "header"
+                },
+                {
+                    text: [
+                        `${data.description}`
+                        ],
+                    style: 'description'
+                }   
+            ],
+            defaultStyle: {
+                font: "Helvetica"
+            },
+            styles: {
+                header: {
+                    fontSize: 20,
+                    bold: true
+                },
+                description: {
+                    fontSize: 16,
+                    bold: false
+                }
+            }
+        }
+
+        const options = {
+            // ...
+        }
+        
+        const pdfReadableStream = printer.createPdfKitDocument(docDefinition, options)
+        // pdfReadableStream.pipe(fs.createWriteStream('document.pdf')); // old syntax for piping
+        // pipeline(pdfReadableStream, fs.createWriteStream('document.pdf')) // new syntax for piping (we don't want to pipe pdf into file on disk right now)
+        pdfReadableStream.end()
+        const path = join(dirname(fileURLToPath(import.meta.url)), `${data._id}.pdf`)
+        await asyncPipeline(pdfReadableStream, fs.createWriteStream(path))
+        return path
     }
   
-    const options = {
-      // ...
-    }
   
-    const pdfReadableStream = printer.createPdfKitDocument(docDefinition, options)
-    // pdfReadableStream.pipe(fs.createWriteStream('document.pdf')); // old syntax for piping
-    // pipeline(pdfReadableStream, fs.createWriteStream('document.pdf')) // new syntax for piping (we don't want to pipe pdf into file on disk right now)
-    pdfReadableStream.end()
-    const path = join(dirname(fileURLToPath(import.meta.url)), "example.pdf")
-    await asyncPipeline(pdfReadableStream, fs.createWriteStream(path))
-    return path
-  }
+}
