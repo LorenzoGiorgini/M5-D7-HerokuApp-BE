@@ -165,17 +165,17 @@ const sendEmailToUser = async (emailRecipient, pdf , name) => {
 	await sgMail.send(msg)
 }
 
-productsRouter.post('/' , productChecker, valueProductChecker, async (req, res, next) => {
+productsRouter.post('/' , multer({storage: cloudinaryStorage}).single("imageUrl"), async (req, res, next) => {
 	try {
 
 		const createdProduct = {
 			_id: uniqid(),
 			...req.body,
+			imageUrl: req.file.path,
 			createdAt: new Date(),
 			updatedAt: new Date()
 		}
 
-	
 		const products = await allProducts();
 
 		products.push(createdProduct);
@@ -198,7 +198,7 @@ productsRouter.post('/' , productChecker, valueProductChecker, async (req, res, 
 });
 
 
-productsRouter.post('/:productId/uploadImage' , multer({storage: cloudinaryStorage}).single("imageUrl") , async (req, res, next) => {
+/* productsRouter.post('/:productId/uploadImage' , multer({storage: cloudinaryStorage}).single("imageUrl") , async (req, res, next) => {
 	try {
 
 		const products = await allProducts()
@@ -218,7 +218,7 @@ productsRouter.post('/:productId/uploadImage' , multer({storage: cloudinaryStora
 	} catch (error) {
 		next(error);
 	}
-});
+}); */
 
 
 productsRouter.put('/:productId' , valueProductChecker , async (req, res, next) => {

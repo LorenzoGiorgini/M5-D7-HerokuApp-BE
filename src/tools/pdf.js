@@ -1,7 +1,6 @@
 import PdfPrinter from "pdfmake";
 import {extname} from "path"
 import fetch from "node-fetch";
-import btoa from "btoa"
 import { promisify } from "util";
 import {pipeline} from "stream"
 import { join , dirname } from "path"
@@ -17,6 +16,7 @@ const fetchImage = async (data) => {
 
 
 const convertImageBase64 = async (data) => {
+    
     let imageBuffer = await fetchImage(data.imageUrl)
 
     const base64String = Buffer.from(imageBuffer).toString("base64")
@@ -28,7 +28,7 @@ const convertImageBase64 = async (data) => {
     const extension = extname(fileName)
     
     const baseUrl = `data:image/${extension};base64,${base64String}`
-
+    
     return baseUrl
 }
 

@@ -6,7 +6,6 @@
   "type": "module",
   "dependencies": {
     "@sendgrid/mail": "^7.5.0",
-    "btoa": "^1.2.1",
     "cloudinary": "^1.27.1",
     "cors": "^2.8.5",
     "express": "^4.17.1",
