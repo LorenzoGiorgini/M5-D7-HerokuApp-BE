@@ -11,15 +11,17 @@ import {productChecker, valueProductChecker} from './validation.js'
 
 
 //all the required stuff to make a stream
-import { createPDF } from "../../tools/pdf.js"
+import { createPDF , generatePDFAsync } from "../../tools/pdf.js"
 import { pipeline } from 'stream';
+import json2csv from "json2csv"
+import sgMail from '@sendgrid/mail'
 
 
 const currentFilePath = fileURLToPath(import.meta.url)
 const parentFolderPath = dirname(currentFilePath)
 const reviewsJSON = join(parentFolderPath, "../../data/reviews.json")
 
-const { readJSON, writeJSON, writeFile } = fs;
+const { readJSON, writeJSON , createReadStream } = fs;
 
 
 
@@ -28,11 +30,13 @@ const productsRouter = express.Router();
 const dataFolder = join(
 	dirname(fileURLToPath(import.meta.url)),
 	'../../data/products.json',
-);
+)
 
 const allReviews = () => readJSON(reviewsJSON)
 
-const allProducts = () => readJSON(dataFolder);
+const allProducts = () => readJSON(dataFolder)
+
+const getStream = () => createReadStream(dataFolder)
 
 
 const cloudinaryStorage = new CloudinaryStorage({
@@ -43,6 +47,37 @@ const cloudinaryStorage = new CloudinaryStorage({
 })
 
 const writeProducts = (product) => writeJSON(dataFolder, product);
+
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+
+productsRouter.get('/downloadCSV' , (req, res, next) => {
+
+	try {
+
+		res.setHeader("Content-Disposition", "attachment; filename=products.csv")
+		
+		//source and destination of the stream
+		const source = getStream()
+
+		//tranformation layer
+		const transform = new json2csv.Transform({fields: ["_id" ,"name" , "description" , "brand" , "imageUrl" , "price" , "category"]})
+
+		//destination
+		const destination = res
+
+		pipeline(source, transform ,destination, error => {
+			if(error) next(error)
+		})
+	
+	} catch (error) {
+		next(error);
+	}
+})
+
+
+
 productsRouter.get('/', async (req, res, next) => {
 	try {
 		if(req.query.category){
@@ -76,18 +111,11 @@ productsRouter.get('/:_id', async (req, res, next) => {
 
 productsRouter.get('/:_id/reviews', async (req,res, next)=>{
 	try{
-		const products = await allProducts();
 		const reviews = await allReviews()
 
-	
-
-		const filteredData = reviews.filter((product)=> product.productId === req.params._id )
+		const filteredData = reviews.filter((review)=> review.productId === req.params._id )
 
 		res.status(200).send(filteredData)
-
-		
-
-
 	}catch(error){
 		next(error);
 	}
@@ -96,17 +124,46 @@ productsRouter.get('/:_id/reviews', async (req,res, next)=>{
 productsRouter.delete('/:_id', async (req, res, next) => {
 	try {
 		const products = await allProducts();
+
 		const deletedProduct = products.filter((pro) => pro._id !== req.params._id);
+
 		console.log('lol');
+
 		await writeProducts(deletedProduct);
+
 		res.status(204).send();
 	} catch (error) {
 		next(error);
 	}
 });
 
+
+//Function to generate an email
+
+const sendEmailToUser = async (emailRecipient, pdf) => {
+
+	const msg = {
+		to: emailRecipient,
+		from: process.env.MY_EMAIL, // Use the email address or domain you verified above
+		subject: 'Sending with Twilio SendGrid is Fun',
+		text: 'and easy to do anywhere, even with Node.js',
+		html: '<strong>and easy to do anywhere, even with Node.js</strong>',
+		attachments: [
+			{
+			  content: pdf,
+			  filename: "attachment.pdf",
+			  type: "application/pdf",
+			  disposition: "attachment"
+			}
+		]
+	};
+
+	await sgMail.send(msg)
+}
+
 productsRouter.post('/', productChecker, valueProductChecker , async (req, res, next) => {
 	try {
+
 		const createdProduct = {
 			_id: uniqid(),
 			...req.body,
@@ -119,6 +176,13 @@ productsRouter.post('/', productChecker, valueProductChecker , async (req, res, 
 		products.push(createdProduct);
 
 		await writeJSON(dataFolder, products);
+
+		//stream
+		const path = await generatePDFAsync({})
+
+		const attachment = fs.readFileSync(path).toString("base64");
+
+		await sendEmailToUser("masterrevenge34@gmail.com", attachment)
 
 		res.status(201).send(createdProduct);
 	} catch (error) {
@@ -176,6 +240,7 @@ productsRouter.put('/:productId' , valueProductChecker , async (req, res, next) 
 
 
 
+
 //Products PDF maker
 productsRouter.get('/:productId/downloadPDF' , async (req, res, next) => {
 
@@ -200,7 +265,6 @@ productsRouter.get('/:productId/downloadPDF' , async (req, res, next) => {
 		next(error);
 	}
 })
-
 
 
 export default productsRouter;
