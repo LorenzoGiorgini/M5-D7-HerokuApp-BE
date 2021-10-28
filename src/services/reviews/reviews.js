@@ -8,7 +8,7 @@ import {reviewsChecker, valueChecker} from './validation.js'
 
 
 
-const  {readJSON, writeJSON} = fs
+const  {readJSON} = fs
 
 
 const reviewsRouter = express.Router()
@@ -27,7 +27,6 @@ reviewsRouter.post("/:id", reviewsChecker, valueChecker, async (req, res) =>{
         ...req.body,
         _id: uniqid(),
         createdAt: new Date()
-
     }
 
     const file = await readJSON(productsJSON)

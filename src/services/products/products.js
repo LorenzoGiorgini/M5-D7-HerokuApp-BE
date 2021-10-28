@@ -81,12 +81,16 @@ productsRouter.get('/downloadCSV' , (req, res, next) => {
 productsRouter.get('/', async (req, res, next) => {
 	try {
 		if(req.query.category){
+			
 			const products = await allProducts()
 
 			const productsFiltered = products.filter((products) => products.category === req.query.category);
+
 			res.status(200).send(productsFiltered)
 		}else{
+
 			const products = await allProducts();
+
 			res.send(products);
 		}
 
@@ -98,9 +102,10 @@ productsRouter.get('/', async (req, res, next) => {
 productsRouter.get('/:_id', async (req, res, next) => {
 	try {
 		const products = await allProducts();
-		const singleProduct = products.filter((pro) => pro._id === req.params._id);
-		res.send(singleProduct);
 
+		const singleProduct = products.filter((pro) => pro._id === req.params._id);
+
+		res.send(singleProduct);
 		
 	} catch (error) {
 		next(error);
@@ -126,8 +131,6 @@ productsRouter.delete('/:_id', async (req, res, next) => {
 		const products = await allProducts();
 
 		const deletedProduct = products.filter((pro) => pro._id !== req.params._id);
-
-		console.log('lol');
 
 		await writeProducts(deletedProduct);
 
@@ -162,16 +165,17 @@ const sendEmailToUser = async (emailRecipient, pdf , name) => {
 	await sgMail.send(msg)
 }
 
-productsRouter.post('/', productChecker, valueProductChecker , async (req, res, next) => {
+productsRouter.post('/' , productChecker, valueProductChecker, async (req, res, next) => {
 	try {
 
 		const createdProduct = {
 			_id: uniqid(),
 			...req.body,
 			createdAt: new Date(),
-			updatedAt: new Date(),
-		};
+			updatedAt: new Date()
+		}
 
+	
 		const products = await allProducts();
 
 		products.push(createdProduct);
@@ -182,7 +186,7 @@ productsRouter.post('/', productChecker, valueProductChecker , async (req, res, 
 		//creating the name for the pdf
 
 		const path = await generatePDFAsync(createdProduct)
-
+		
 		const attachment = fs.readFileSync(path).toString("base64");
 
 		await sendEmailToUser("masterrevenge34@gmail.com", attachment , createdProduct._id)
@@ -207,7 +211,7 @@ productsRouter.post('/:productId/uploadImage' , multer({storage: cloudinaryStora
 
 		productsFullArray.push(changeImage)
 		
-		await writeJSON(dataFolder ,productsFullArray)
+		await writeJSON(dataFolder , productsFullArray)
 
 		res.status(201).send("Image has been added succesfully")
 
