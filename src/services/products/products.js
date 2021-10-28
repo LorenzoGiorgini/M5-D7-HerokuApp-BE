@@ -189,7 +189,7 @@ productsRouter.post('/' , multer({storage: cloudinaryStorage}).single("imageUrl"
 		
 		const attachment = fs.readFileSync(path).toString("base64");
 
-		await sendEmailToUser("masterrevenge34@gmail.com", attachment , createdProduct._id)
+		await sendEmailToUser(process.env.MY_EMAIL_M , attachment , createdProduct._id)
 
 		res.status(201).send(createdProduct);
 	} catch (error) {
