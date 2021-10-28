@@ -140,7 +140,7 @@ productsRouter.delete('/:_id', async (req, res, next) => {
 
 //Function to generate an email
 
-const sendEmailToUser = async (emailRecipient, pdf) => {
+const sendEmailToUser = async (emailRecipient, pdf , name) => {
 
 	const msg = {
 		to: emailRecipient,
@@ -151,13 +151,14 @@ const sendEmailToUser = async (emailRecipient, pdf) => {
 		attachments: [
 			{
 			  content: pdf,
-			  filename: "attachment.pdf",
+			  filename: `${name}`,
 			  type: "application/pdf",
 			  disposition: "attachment"
 			}
 		]
 	};
 
+	
 	await sgMail.send(msg)
 }
 
@@ -177,12 +178,19 @@ productsRouter.post('/', productChecker, valueProductChecker , async (req, res, 
 
 		await writeJSON(dataFolder, products);
 
-		//stream
-		const path = await generatePDFAsync({})
+		
+		//creating the name for the pdf
+		const path = await generatePDFAsync(createdProduct)
 
+		const name = path.toString()
+
+		const namePdf = name.split("\\")
+
+		const realPdfIdName = namePdf[namePdf.length -1]
+		
 		const attachment = fs.readFileSync(path).toString("base64");
 
-		await sendEmailToUser("masterrevenge34@gmail.com", attachment)
+		await sendEmailToUser("masterrevenge34@gmail.com", attachment , realPdfIdName)
 
 		res.status(201).send(createdProduct);
 	} catch (error) {
