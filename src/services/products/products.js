@@ -15,7 +15,6 @@ import { createPDF , generatePDFAsync } from "../../tools/pdf.js"
 import { pipeline } from 'stream';
 import json2csv from "json2csv"
 import sgMail from '@sendgrid/mail'
-import {extname} from "path";
 
 
 const currentFilePath = fileURLToPath(import.meta.url)
